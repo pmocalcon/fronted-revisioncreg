@@ -94,7 +94,6 @@ function renderProgress() {
 
 async function fetchConfig() {
   if (!state.backendUrl) {
-    showMessage('Configura la URL del backend en localStorage["backendUrl"] o en window.BACKEND_URL antes de recargar.', true);
     return;
   }
   try {
@@ -115,7 +114,6 @@ async function fetchConfig() {
 
 async function runProcess(processType) {
   if (!state.backendUrl) {
-    showMessage('Configura la URL del backend en localStorage["backendUrl"] o en window.BACKEND_URL.', true);
     return;
   }
   const municipio = els.muniSelect.value;
