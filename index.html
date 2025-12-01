@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel CREG | Front listo para Vercel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="bg-texture"></div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <p class="eyebrow">AU CREG</p>
+        <h1>Panel de Verificaciones</h1>
+      </div>
+    </div>
+    <div class="status-chip" id="connection-status">Sin probar</div>
+  </header>
+
+  <main class="layout">
+    <section class="panel panel-wide">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Conexión al backend</p>
+          <h2>URL del servicio Flask</h2>
+        </div>
+        <button id="refresh-config" class="ghost-btn">Refrescar datos</button>
+      </div>
+      <div class="backend-grid">
+        <div class="input-group">
+          <label for="backend-url">Endpoint base</label>
+          <input type="url" id="backend-url" placeholder="https://mi-backend.tu-dominio.com" autocomplete="off">
+          <small>Guarda la URL del backend que ya tienes levantado. Queda almacenada en tu navegador.</small>
+        </div>
+        <div class="action-col">
+          <button id="save-backend" class="primary-btn">Guardar y probar</button>
+          <p class="hint" id="last-update">Sin sincronizar</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Selección</p>
+          <h2>Municipio y mes</h2>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="input-group">
+          <label for="municipio">Municipio</label>
+          <select id="municipio"></select>
+        </div>
+        <div class="input-group">
+          <label for="mes">Mes</label>
+          <select id="mes"></select>
+        </div>
+      </div>
+      <div class="panel-head spaced">
+        <div>
+          <p class="eyebrow">Procesos</p>
+          <h2>Ejecuta las validaciones</h2>
+        </div>
+      </div>
+      <div class="button-grid">
+        <button class="pill-btn" data-process="boton1">Proceso 1: carpeta y Soportes</button>
+        <button class="pill-btn" data-process="boton2">Proceso 2: CREG en carpeta</button>
+        <button class="pill-btn" data-process="boton5">Proceso 3: mes/año en hojas</button>
+        <button class="pill-btn" data-process="boton6">Proceso 4: IPP vs DANE</button>
+        <button class="pill-btn" data-process="boton7">Proceso 5: Índice de Precio</button>
+        <button class="pill-btn" data-process="boton8">Proceso 6: Ítems apagadas/intermitentes</button>
+        <button class="pill-btn" data-process="boton12">Proceso 7: Ítems encendidas</button>
+        <button class="pill-btn" data-process="boton9">Proceso 8: Conteo horas apagado</button>
+        <button class="pill-btn" data-process="boton10">Proceso 9: Horas periodo ID_OFF</button>
+        <button class="pill-btn" data-process="boton11">Proceso 10: Horas periodo ID_ON</button>
+        <button class="pill-btn" data-process="boton13">Proceso 11: UCAP vs CREG</button>
+      </div>
+    </section>
+
+    <section class="panel" id="result-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Resultado</p>
+          <h2>Respuesta del backend</h2>
+        </div>
+      </div>
+      <div class="result-box">
+        <p id="result-message">Aún no se ha ejecutado ningún proceso.</p>
+        <div class="ruta">
+          <span class="eyebrow">Ruta CREG</span>
+          <p id="ruta-creg">—</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="progress-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Progreso</p>
+          <h2>Estado por municipio</h2>
+        </div>
+        <button id="refresh-progress" class="ghost-btn">Actualizar</button>
+      </div>
+      <ul id="progress-list" class="progress-list"></ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Frontend estático listo para Vercel · Mantén tu backend Flask donde ya está funcionando.</p>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>
