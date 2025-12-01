@@ -9,18 +9,13 @@ const state = {
 };
 
 const els = {
-  backendInput: document.getElementById('backend-url'),
-  connectionStatus: document.getElementById('connection-status'),
-  lastUpdate: document.getElementById('last-update'),
-  saveBackend: document.getElementById('save-backend'),
-  refreshConfig: document.getElementById('refresh-config'),
-  refreshProgress: document.getElementById('refresh-progress'),
   muniSelect: document.getElementById('municipio'),
   mesSelect: document.getElementById('mes'),
   buttons: Array.from(document.querySelectorAll('[data-process]')),
-  resultMessage: document.getElementById('result-message'),
+  resultText: document.getElementById('result-text'),
   rutaCreg: document.getElementById('ruta-creg'),
   progressList: document.getElementById('progress-list'),
+  progressTitle: document.getElementById('progress-title'),
 };
 
 const trackedProcesses = [
@@ -28,37 +23,25 @@ const trackedProcesses = [
   'boton8', 'boton12', 'boton9', 'boton10', 'boton11', 'boton13',
 ];
 
-function setStatus(text, variant = 'idle') {
-  els.connectionStatus.textContent = text;
-  els.connectionStatus.classList.remove('ok', 'error');
-  if (variant === 'ok') els.connectionStatus.classList.add('ok');
-  if (variant === 'error') els.connectionStatus.classList.add('error');
+function ensureBackendUrl() {
+  if (state.backendUrl) return true;
+  const input = prompt('Ingresa la URL base de tu backend Flask (ej: https://mi-backend.com)');
+  if (input) {
+    state.backendUrl = input.trim().replace(/\/+$/, '');
+    localStorage.setItem('backendUrl', state.backendUrl);
+    return true;
+  }
+  els.resultText.textContent = 'Falta la URL del backend. Refresca e ingrésala para continuar.';
+  return false;
 }
 
 function showMessage(message, isError = false) {
-  els.resultMessage.textContent = message;
-  els.resultMessage.classList.toggle('error', isError);
-  els.resultMessage.classList.toggle('success', !isError);
+  els.resultText.textContent = message;
+  els.resultText.classList.toggle('text-danger', isError);
 }
 
 function updateRuta(text) {
   els.rutaCreg.textContent = text || '—';
-}
-
-function setBackendUrl(url) {
-  if (!url) return;
-  const clean = url.trim().replace(/\/+$/, '');
-  state.backendUrl = clean;
-  localStorage.setItem('backendUrl', clean);
-  els.backendInput.value = clean;
-}
-
-function toggleLoading(isLoading) {
-  state.loading = isLoading;
-  els.buttons.forEach(btn => btn.disabled = isLoading);
-  els.saveBackend.disabled = isLoading;
-  els.refreshConfig.disabled = isLoading;
-  els.refreshProgress.disabled = isLoading;
 }
 
 function renderSelects() {
@@ -88,27 +71,24 @@ function renderSelects() {
 
   els.muniSelect.value = state.selectedMunicipio;
   els.mesSelect.value = state.selectedMes;
+  els.progressTitle.textContent = `Progreso de Revisión - ${state.selectedMes || 'Seleccione un mes'}`;
 }
 
 function renderProgress() {
   els.progressList.innerHTML = '';
   if (!state.municipalities.length) {
-    const li = document.createElement('li');
-    li.textContent = 'Sin municipios cargados.';
-    li.className = 'progress-item';
-    els.progressList.appendChild(li);
+    els.progressList.innerHTML = '<li>Sin municipios cargados.</li>';
     return;
   }
 
   state.municipalities.forEach(m => {
     const li = document.createElement('li');
-    li.className = 'progress-item';
     const name = document.createElement('span');
-    name.className = 'name';
+    name.className = 'municipality';
     name.textContent = m.display_name || m.displayName || m.code;
 
     const badge = document.createElement('span');
-    badge.className = 'badge';
+    badge.className = 'status';
 
     const muniProgress = state.progress[m.code] || {};
     const monthData = muniProgress[state.selectedMes] || { completed_steps: 0 };
@@ -116,7 +96,7 @@ function renderProgress() {
     const isDone = steps >= trackedProcesses.length;
 
     badge.textContent = isDone ? 'Completado' : `${steps}/${trackedProcesses.length}`;
-    badge.classList.add(isDone ? 'ok' : 'pending');
+    badge.classList.add(isDone ? 'completed' : 'in-progress');
 
     li.appendChild(name);
     li.appendChild(badge);
@@ -125,13 +105,7 @@ function renderProgress() {
 }
 
 async function fetchConfig() {
-  if (!state.backendUrl) {
-    showMessage('Configura primero la URL del backend.', true);
-    setStatus('Sin backend', 'error');
-    return;
-  }
-
-  toggleLoading(true);
+  if (!ensureBackendUrl()) return;
   try {
     const res = await fetch(`${state.backendUrl}/api/config`, { mode: 'cors' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -142,38 +116,28 @@ async function fetchConfig() {
     renderSelects();
     renderProgress();
     showMessage('Configuración sincronizada con éxito.');
-    setStatus('Conectado', 'ok');
-    els.lastUpdate.textContent = `Actualizado: ${new Date().toLocaleString()}`;
   } catch (err) {
     console.error(err);
     showMessage(`No se pudo sincronizar: ${err.message}`, true);
-    setStatus('Sin conexión', 'error');
-  } finally {
-    toggleLoading(false);
   }
 }
 
 async function runProcess(processType) {
-  if (!state.backendUrl) {
-    showMessage('Configura primero la URL del backend.', true);
-    return;
-  }
-  if (!state.selectedMunicipio || !state.selectedMes) {
+  if (!ensureBackendUrl()) return;
+  const municipio = els.muniSelect.value;
+  const mes = els.mesSelect.value;
+  if (!municipio || !mes) {
     showMessage('Selecciona municipio y mes antes de ejecutar.', true);
     return;
   }
-
-  toggleLoading(true);
+  if (state.loading) return;
+  state.loading = true;
   try {
     const res = await fetch(`${state.backendUrl}/api/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       mode: 'cors',
-      body: JSON.stringify({
-        municipio: state.selectedMunicipio,
-        mes: state.selectedMes,
-        process: processType,
-      }),
+      body: JSON.stringify({ municipio, mes, process: processType }),
     });
     const data = await res.json();
     const ok = data.ok !== false && res.ok;
@@ -187,23 +151,11 @@ async function runProcess(processType) {
     console.error(err);
     showMessage(`Error al ejecutar el proceso: ${err.message}`, true);
   } finally {
-    toggleLoading(false);
+    state.loading = false;
   }
 }
 
 function bindEvents() {
-  els.backendInput.addEventListener('input', (e) => {
-    state.backendUrl = e.target.value;
-  });
-
-  els.saveBackend.addEventListener('click', () => {
-    setBackendUrl(els.backendInput.value);
-    fetchConfig();
-  });
-
-  els.refreshConfig.addEventListener('click', fetchConfig);
-  els.refreshProgress.addEventListener('click', fetchConfig);
-
   els.muniSelect.addEventListener('change', (e) => {
     state.selectedMunicipio = e.target.value;
     renderProgress();
@@ -211,6 +163,7 @@ function bindEvents() {
 
   els.mesSelect.addEventListener('change', (e) => {
     state.selectedMes = e.target.value;
+    els.progressTitle.textContent = `Progreso de Revisión - ${state.selectedMes || 'Seleccione un mes'}`;
     renderProgress();
   });
 
@@ -221,12 +174,7 @@ function bindEvents() {
 
 function init() {
   bindEvents();
-  if (state.backendUrl) {
-    els.backendInput.value = state.backendUrl;
-    fetchConfig();
-  } else {
-    showMessage('Define la URL de tu backend Flask y presiona "Guardar y probar".');
-  }
+  fetchConfig();
 }
 
 init();
