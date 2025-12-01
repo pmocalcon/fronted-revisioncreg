@@ -1,5 +1,5 @@
 const state = {
-  backendUrl: localStorage.getItem('backendUrl') || '',
+  backendUrl: window.BACKEND_URL || localStorage.getItem('backendUrl') || '',
   municipalities: [],
   meses: [],
   progress: {},
@@ -22,18 +22,6 @@ const trackedProcesses = [
   'boton1', 'boton2', 'boton5', 'boton6', 'boton7',
   'boton8', 'boton12', 'boton9', 'boton10', 'boton11', 'boton13',
 ];
-
-function ensureBackendUrl() {
-  if (state.backendUrl) return true;
-  const input = prompt('Ingresa la URL base de tu backend Flask (ej: https://mi-backend.com)');
-  if (input) {
-    state.backendUrl = input.trim().replace(/\/+$/, '');
-    localStorage.setItem('backendUrl', state.backendUrl);
-    return true;
-  }
-  els.resultText.textContent = 'Falta la URL del backend. Refresca e ingrésala para continuar.';
-  return false;
-}
 
 function showMessage(message, isError = false) {
   els.resultText.textContent = message;
@@ -105,7 +93,10 @@ function renderProgress() {
 }
 
 async function fetchConfig() {
-  if (!ensureBackendUrl()) return;
+  if (!state.backendUrl) {
+    showMessage('Configura la URL del backend en localStorage["backendUrl"] o en window.BACKEND_URL antes de recargar.', true);
+    return;
+  }
   try {
     const res = await fetch(`${state.backendUrl}/api/config`, { mode: 'cors' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -123,7 +114,10 @@ async function fetchConfig() {
 }
 
 async function runProcess(processType) {
-  if (!ensureBackendUrl()) return;
+  if (!state.backendUrl) {
+    showMessage('Configura la URL del backend en localStorage["backendUrl"] o en window.BACKEND_URL.', true);
+    return;
+  }
   const municipio = els.muniSelect.value;
   const mes = els.mesSelect.value;
   if (!municipio || !mes) {
