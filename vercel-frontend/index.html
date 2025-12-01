@@ -2,118 +2,348 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <title>Verificación de Inconsistencias CREG</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel CREG | Front listo para Vercel</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- CSS personalizado -->
   <link rel="stylesheet" href="./styles.css">
+  <style>
+    /* =========================
+       Estilos Base
+    ========================= */
+
+    .logo-container {
+      position: fixed;
+      top: 40px;
+      left: 40px;
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      z-index: 1000;
+    }
+    .logo-container img {
+      max-height: 80px;
+    }
+    .container {
+      max-width: 1000px; /* Aumentado para dar espacio a dos columnas */
+      margin: auto;
+    }
+    /* =========================
+       Layout Principal
+    ========================= */
+    .form-container {
+      display: flex;
+      flex-direction: row; /* Ubicar elementos lado a lado */
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .buttons-container {
+      flex: 1;
+      min-width: 300px;
+    }
+    .result-container {
+      flex: 1;
+      min-width: 300px;
+      position: -webkit-sticky;
+      position: sticky;
+      top: 20px;
+      height: fit-content;
+    }
+    /* =========================
+       Tarjeta y Animaciones
+    ========================= */
+    .card {
+      border: none;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.3s ease, background-color 0.3s;
+    }
+    .card:hover {
+      transform: scale(1.02);
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fadeInUp {
+      animation: fadeInUp 0.5s ease-out;
+    }
+    /* =========================
+       Botones y Formularios
+    ========================= */
+    .btn-custom {
+      border: 2px solid #555;
+      background-color: transparent;
+      color: #555;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+    .btn-custom:hover {
+      background-color: #555;
+      color: #fff;
+      transform: scale(1.05);
+    }
+    .btn-custom:active {
+      transform: scale(0.98);
+    }
+    .form-label {
+      font-size: 1.1rem;
+    }
+    .form-select {
+      font-size: 1rem;
+    }
+    /* =========================
+       Mensaje de Bienvenida
+    ========================= */
+    .welcome {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 123, 255);
+      color: white;
+      font-size: 2rem;
+      z-index: 9999;
+      opacity: 0;
+    }
+    .hidden {
+      display: none;
+    }
+    @keyframes fadeInOut {
+      0%   { opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .show {
+      display: flex;
+      animation: fadeInOut 3s ease-out forwards;
+    }
+    /* =========================
+       Modo Oscuro
+    ========================= */
+    .dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    .dark-mode .card {
+      background-color: #1e1e1e;
+    }
+    .dark-mode .card-header {
+      background-color: #0d47a1;
+      color: #e0e0e0;
+    }
+    .dark-mode .form-select {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      border-color: #333;
+    }
+    .dark-mode .btn-custom {
+      border: 2px solid #e0e0e0;
+      color: #e0e0e0;
+    }
+    .dark-mode .btn-custom:hover {
+      background-color: #e0e0e0;
+      color: #1e1e0e;
+    }
+    .dark-mode .alert {
+      background-color: #333;
+      color: #e0e0e0;
+      border-color: #444;
+    }
+    /* =========================
+       Botón Toggle Modo
+    ========================= */
+    .btn-toggle-mode {
+      background-color: transparent;
+      border: 1px solid #007bff;
+      color: #007bff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .btn-toggle-mode:hover {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
 </head>
 <body>
-  <div class="bg-texture"></div>
-  <header class="topbar">
-    <div class="brand">
-      <span class="dot"></span>
-      <div>
-        <p class="eyebrow">AU CREG</p>
-        <h1>Panel de Verificaciones</h1>
+  <!-- Mensaje de Bienvenida (overlay) -->
+  <div id="welcome-message" class="welcome hidden">
+    Bienvenido Director Técnico
+  </div>
+
+  <!-- Logos -->
+  <div class="logo-container">
+    <img src="/static/img/Imagen1.png" alt="Logo 1">
+    <img src="/static/img/Imagen2.png" alt="Logo 2">
+  </div>
+
+  <div class="container my-5">
+    <!-- Botón de modo oscuro/ligero -->
+    <div class="d-flex justify-content-end mb-2">
+      <button id="toggle-dark-mode" class="btn btn-sm btn-toggle-mode" onclick="toggleDarkMode()">
+        <span id="toggle-icon">🌙</span>
+      </button>
+    </div>
+
+    <div class="form-container">
+      <!-- Formulario y botones -->
+      <div class="buttons-container">
+        <div class="card shadow-lg animate-fadeInUp">
+          <div class="card-header text-center py-3 border-bottom-0" id="header">
+            <h1 class="mb-0">Verificación de Inconsistencias CREG</h1>
+          </div>
+          <div class="card-body">
+            <form id="process-form">
+              <div class="row mb-3">
+                <!-- Selección de Municipio -->
+                <div class="col-md-6">
+                  <label for="municipio" class="form-label fw-bold">Selecciona el municipio:</label>
+                  <select class="form-select" name="municipio" id="municipio" required>
+                    <option value="">Cargando...</option>
+                  </select>
+                </div>
+                <!-- Selección de Mes -->
+                <div class="col-md-6">
+                  <label for="mes" class="form-label fw-bold">Selecciona el mes:</label>
+                  <select class="form-select" name="mes" id="mes" required>
+                    <option value="">Cargando...</option>
+                  </select>
+                </div>
+              </div>
+              <fieldset class="mb-4">
+                <legend class="fw-bold">Procesos</legend>
+                <div class="d-grid gap-2">
+                  <button type="button" data-process="boton1" class="btn btn-custom">
+                    Proceso 1: Verificar carpeta del mes y archivos en Soportes
+                  </button>
+                  <button type="button" data-process="boton2" class="btn btn-custom">
+                    Proceso 2: Verificar que el archivo CREG esté en la carpeta del mes
+                  </button>
+                  <button type="button" data-process="boton5" class="btn btn-custom">
+                    Proceso 3: Verificar mes y año en las hojas del archivo CREG
+                  </button>
+                  <button type="button" data-process="boton6" class="btn btn-custom">
+                    Proceso 4: Verificar que el valor del IPP sea igual al del DANE
+                  </button>
+                  <button type="button" data-process="boton7" class="btn btn-custom">
+                    Proceso 5: Analizar cálculo del Índice de Actualización de Precio
+                  </button>
+                  <button type="button" data-process="boton8" class="btn btn-custom">
+                    Proceso 6: Comparar cantidad de ITEMS (apagadas e intermitentes) entre CREG y Soportes
+                  </button>
+                  <button type="button" data-process="boton12" class="btn btn-custom">
+                    Proceso 7: Comparar cantidad de ITEMS (encendidas) entre CREG y Soportes
+                  </button>
+                  <button type="button" data-process="boton9" class="btn btn-custom">
+                    Proceso 8: Verificar operación de conteo de horas de apagado
+                  </button>
+                  <button type="button" data-process="boton10" class="btn btn-custom">
+                    Proceso 9: Validar número de horas del periodo en hoja ID_OFF
+                  </button>
+                  <button type="button" data-process="boton11" class="btn btn-custom">
+                    Proceso 10: Validar número de horas del periodo en hoja ID_ON
+                  </button>
+                  <button type="button" data-process="boton13" class="btn btn-custom">
+                    Proceso 11: Comparar UCAP y CREG
+                  </button>
+                </div>
+              </fieldset>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- Contenedor de resultados -->
+      <div class="result-container">
+        <div class="alert alert-secondary animate-fadeInUp" role="alert">
+          <h4 class="alert-heading">Resultado</h4>
+          <p class="mb-0" id="result-text">Aún no se ha ejecutado ningún proceso.</p>
+        </div>
+        <div class="alert alert-info animate-fadeInUp" role="alert">
+          <h4 class="alert-heading">Ruta del archivo CREG</h4>
+          <p class="mb-0" id="ruta-creg">—</p>
+        </div>
+
+        <!-- Contenedor de Progreso -->
+        <div class="progress-container animate-fadeInUp">
+          <h4 id="progress-title">Progreso de Revisión - Selecciona un mes</h4>
+          <ul class="progress-list" id="progress-list">
+          </ul>
+        </div>
       </div>
     </div>
-    <div class="status-chip" id="connection-status">Sin probar</div>
-  </header>
-
-  <main class="layout">
-    <section class="panel panel-wide">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Conexión al backend</p>
-          <h2>URL del servicio Flask</h2>
-        </div>
-        <button id="refresh-config" class="ghost-btn">Refrescar datos</button>
-      </div>
-      <div class="backend-grid">
-        <div class="input-group">
-          <label for="backend-url">Endpoint base</label>
-          <input type="url" id="backend-url" placeholder="https://mi-backend.tu-dominio.com" autocomplete="off">
-          <small>Guarda la URL del backend que ya tienes levantado. Queda almacenada en tu navegador.</small>
-        </div>
-        <div class="action-col">
-          <button id="save-backend" class="primary-btn">Guardar y probar</button>
-          <p class="hint" id="last-update">Sin sincronizar</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Selección</p>
-          <h2>Municipio y mes</h2>
-        </div>
-      </div>
-      <div class="form-grid">
-        <div class="input-group">
-          <label for="municipio">Municipio</label>
-          <select id="municipio"></select>
-        </div>
-        <div class="input-group">
-          <label for="mes">Mes</label>
-          <select id="mes"></select>
-        </div>
-      </div>
-      <div class="panel-head spaced">
-        <div>
-          <p class="eyebrow">Procesos</p>
-          <h2>Ejecuta las validaciones</h2>
-        </div>
-      </div>
-      <div class="button-grid">
-        <button class="pill-btn" data-process="boton1">Proceso 1: carpeta y Soportes</button>
-        <button class="pill-btn" data-process="boton2">Proceso 2: CREG en carpeta</button>
-        <button class="pill-btn" data-process="boton5">Proceso 3: mes/año en hojas</button>
-        <button class="pill-btn" data-process="boton6">Proceso 4: IPP vs DANE</button>
-        <button class="pill-btn" data-process="boton7">Proceso 5: Índice de Precio</button>
-        <button class="pill-btn" data-process="boton8">Proceso 6: Ítems apagadas/intermitentes</button>
-        <button class="pill-btn" data-process="boton12">Proceso 7: Ítems encendidas</button>
-        <button class="pill-btn" data-process="boton9">Proceso 8: Conteo horas apagado</button>
-        <button class="pill-btn" data-process="boton10">Proceso 9: Horas periodo ID_OFF</button>
-        <button class="pill-btn" data-process="boton11">Proceso 10: Horas periodo ID_ON</button>
-        <button class="pill-btn" data-process="boton13">Proceso 11: UCAP vs CREG</button>
-      </div>
-    </section>
-
-    <section class="panel" id="result-panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Resultado</p>
-          <h2>Respuesta del backend</h2>
-        </div>
-      </div>
-      <div class="result-box">
-        <p id="result-message">Aún no se ha ejecutado ningún proceso.</p>
-        <div class="ruta">
-          <span class="eyebrow">Ruta CREG</span>
-          <p id="ruta-creg">—</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel" id="progress-panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Progreso</p>
-          <h2>Estado por municipio</h2>
-        </div>
-        <button id="refresh-progress" class="ghost-btn">Actualizar</button>
-      </div>
-      <ul id="progress-list" class="progress-list"></ul>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <p>Frontend estático listo para Vercel · Mantén tu backend Flask donde ya está funcionando.</p>
-  </footer>
-
+  </div>
+  
+  <!-- Bootstrap Bundle JS (incluye Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Script para el modo oscuro/ligero -->
+  <script>
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      var icon = document.getElementById('toggle-icon');
+      icon.textContent = document.body.classList.contains('dark-mode') ? '☀' : '🌙';
+    }
+  </script>
+  <!-- Script de Bienvenida: se muestra solo si aún no se ha mostrado en esta sesión -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      if (!sessionStorage.getItem("welcomeShown")) {
+        var welcome = document.getElementById("welcome-message");
+        welcome.classList.remove("hidden");
+        welcome.classList.add("show");
+        setTimeout(function() {
+          welcome.parentNode.removeChild(welcome);
+        }, 3000);
+        sessionStorage.setItem("welcomeShown", "true");
+      }
+    });
+  </script>
   <script src="./script.js"></script>
+  <footer style="
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    background: linear-gradient(to right, #f8f9fa, #e9ecef, #f8f9fa);
+    border-top: 1px solid #dee2e6;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+  ">
+    <div style="
+      font-family: 'Roboto', sans-serif;
+      font-size: 1.1rem;
+      color: #495057;
+      font-weight: 500;
+    ">
+      Desarrollado por <span style="color: #0d6efd; font-weight: 600;">Alexsandra Ortiz</span>
+    </div>
+    <div style="
+      margin-top: 5px;
+      font-size: 0.9rem;
+      color: #6c757d;
+    ">
+      © 2024 Todos los derechos reservados
+    </div>
+  </footer>
 </body>
 </html>
